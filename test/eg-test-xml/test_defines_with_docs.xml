@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<foo xmlns:eg="http://examplotron.org/0/"
+	xmlns:egx="http://accuity.com/egx/0/">
+	<elementWithAtomicType eg:define="type1">
+		<egx:docs>elementWithAtomicType</egx:docs>
+		234
+	</elementWithAtomicType>
+	<elementWithSpecifiedType eg:define="type2" eg:content="xsd:nonNegativeInteger">
+		<egx:docs>elementWithSpecifiedType</egx:docs>
+		234
+	</elementWithSpecifiedType>
+	<elementWithElementalType eg:define="type3">
+		<egx:docs>elementWithElementalType</egx:docs>
+		<child>
+            <egx:docs>childElementDocs</egx:docs>
+            a
+        </child>
+	</elementWithElementalType>
+	<elementWithMixedType eg:define="type4">
+		<egx:docs>elementWithMixedType</egx:docs>
+		some <tagged>text</tagged>
+	</elementWithMixedType>
+	<elementWithEnumType eg:define="type5">
+		<egx:docs>elementWithEnumType</egx:docs>
+		|1|2|3|
+	</elementWithEnumType>
+	<elementWithPatternType eg:define="type6">
+		<egx:docs>elementWithPatternType</egx:docs>
+		/a+b+c+/
+	</elementWithPatternType>
+	<attributeHolder>
+		<eg:attribute name="attributeWithAtomicType" eg:define="type7">
+			<egx:docs>attributeWithAtomicType</egx:docs>
+			789
+		</eg:attribute>
+		<eg:attribute name="attributeWithSpecifiedType" eg:define="type8" eg:content="xsd:nonNegativeInteger">
+			<egx:docs>attributeWithSpecifiedType</egx:docs>
+			789
+		</eg:attribute>
+		<eg:attribute name="attributeWithEnumType" eg:define="type9">
+			<egx:docs>attributeWithEnumType</egx:docs>
+			|7|8|9|
+		</eg:attribute>
+		<eg:attribute name="attributeWithPatternType" eg:define="typeA">
+			<egx:docs>attributeWithPatternType</egx:docs>
+			/a+b+c+/
+		</eg:attribute>
+		something
+	</attributeHolder>
+</foo>

@@ -1,0 +1,2058 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xp:description
+	xmlns:xp="http://www.jenitennison.com/xslt/xspec"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:eg="http://examplotron.org/0/"
+	xmlns:egx="http://accuity.com/egx/0/"
+	stylesheet="../eg2xsd.xsl">
+
+	<xp:scenario label="when reading a document root">
+		<xp:scenario label="with no namespace, no imports or includes">
+			<xp:context href="eg-test-xml/test_document_root.xml"/>
+			<xp:expect label="a schema is created">
+				<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+					elementFormDefault="qualified">
+					<xs:element name="foo" type="xs:string"/>
+				</xs:schema>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with a namespace, no imports or includes">
+			<xp:context href="eg-test-xml/test_document_with_namespace.xml"/>
+			<xp:expect label="a schema is created with targetNamespace">
+				<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+					elementFormDefault="qualified" 
+					targetNamespace="http://www.example.com/ns/0/">
+					<xs:element name="foo" type="xs:string"/>
+				</xs:schema>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with a namespace, with imports and includes">
+			<xp:context href="eg-test-xml/test_document_with_imports.xml"/>
+			<xp:expect label="create each import/include as required, once, elements referencing them">
+				<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+					elementFormDefault="qualified" 
+					targetNamespace="http://www.example.com/ns/0/">
+					<xs:import schemaLocation="ns-a.xsd" namespace="http://www.example.com/ns-a/0/"/>
+					<xs:include schemaLocation="ns-lib.xsd"/>
+					<xs:element name="foo">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element xmlns:bar="http://www.example.com/ns-a/0/" ref="bar:bar"/>
+								<xs:element xmlns:bar="http://www.example.com/ns-a/0/" ref="bar:baz"/>
+								<xs:element xmlns="http://www.example.com/ns/0/" ref="qux"/>
+								<xs:element xmlns="http://www.example.com/ns/0/" ref="quxx"/>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+				</xs:schema>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+
+	<xp:scenario label="when reading a simple element, no markup">
+		<xp:scenario label="with a single element">
+			<xp:context>
+				<element>string</element>
+			</xp:context>
+			<xp:expect label="a normal atomic-typed element is created">
+				<xs:element name="element" type="xs:string"/>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with an empty element">
+			<xp:context>
+				<element/>
+			</xp:context>
+			<xp:expect label="an element is created with no type">
+				<xs:element name="element"/>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with nested elements">
+			<xp:context>
+				<foo>
+					<bar>My first examplotron.</bar>
+					<baz>Hello world!</baz>
+				</foo>
+			</xp:context>
+			<xp:expect label="a nested schema is created">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="bar" type="xs:string"/>
+							<xs:element name="baz" type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with elements and attributes">
+			<xp:context>
+				<foo true="no longer">
+					<bar>My first examplotron.</bar>
+				</foo>
+			</xp:context>
+			<xp:expect label="a nested schema is created">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="bar" type="xs:string"/>
+						</xs:sequence>
+						<xs:attribute name="true" type="xs:string"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+	
+	<xp:scenario label="when reading occurrence markup">
+		<xp:scenario label="with inferred repetition">
+			<xp:context>
+				<foo>
+					<bar>My second examplotron.</bar>
+					<bar>Hello world!</bar>
+				</foo>
+			</xp:context>
+			<xp:expect label="an unbounded occurrence element is created">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="bar" type="xs:string" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with interrupted inferred repetition">
+			<xp:context>
+				<foo>
+					<bar>My third examplotron.</bar>
+					<baz/>
+					<bar>Hello world!</bar>
+				</foo>
+			</xp:context>
+			<xp:expect label="no special occurrence is inferred">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="bar" type="xs:string"/>
+							<xs:element name="baz"/>
+							<xs:element name="bar" type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with +">
+			<xp:context>
+				<bar eg:occurs="+">My nth examplotron.</bar>
+			</xp:context>
+			<xp:expect label="an unbounded occurrence element is created">
+				<xs:element name="bar" type="xs:string" maxOccurs="unbounded"/>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with *">
+			<xp:context>
+				<bar eg:occurs="*">My nth examplotron.</bar>
+			</xp:context>
+			<xp:expect label="an optional unbounded occurrence element is created">
+				<xs:element name="bar" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with ?">
+			<xp:context>
+				<bar eg:occurs="?">My nth examplotron.</bar>
+			</xp:context>
+			<xp:expect label="an optional occurrence element is created">
+				<xs:element name="bar" type="xs:string" minOccurs="0"/>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with .">
+			<xp:context>
+				<bar eg:occurs=".">My nth examplotron.</bar>
+			</xp:context>
+			<xp:expect label="an element is created">
+				<xs:element name="bar" type="xs:string"/>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with anything else, actually">
+			<xp:context>
+				<bar eg:occurs="spork">My nth examplotron.</bar>
+			</xp:context>
+			<xp:expect label="an element is created">
+				<xs:element name="bar" type="xs:string"/>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with interrupted by another eg:occurs inferred repetition">
+			<xp:context>
+				<foo>
+					<bar>My nth examplotron.</bar>
+					<bar eg:occurs=".">This declaration "isolates" the previous one from the next one</bar>
+					<bar>Hello world!</bar>
+					<bar>This new declaration has the effect that the previous one will be considered as "oneOrMore".</bar>
+				</foo>
+			</xp:context>
+			<xp:expect label="no special occurrence is inferred">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="bar" type="xs:string"/>
+							<xs:element name="bar" type="xs:string"/>
+							<xs:element name="bar" type="xs:string" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with -">
+			<xp:context>
+				<foo xmlns:eg="http://examplotron.org/0/">
+					<bar eg:occurs="*">My nth examplotron.</bar>
+					<bar eg:occurs="-">Hello world!</bar>
+				</foo>
+			</xp:context>
+			<xp:expect label="no element is created">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="bar" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+
+	<xp:scenario label="when reading elements with namespaces">
+		<!-- 
+		Whereas RNG will allow multiple namespaces in the same schema, XSD does not.
+		Elements in different namespaces must be defined in separate egx files and 
+		included in using @egx:from
+		
+		Elements defined in other namespaces with no egx:from are currently created into
+		the main targetNamespace of the XSD
+		-->
+		<xp:context>
+			<foo xmlns="http://www.example.com/ns/1/"
+				xmlns:bar="http://www.example.com/ns/2/">
+				<bar:bar egx:from="ns-2.xsd"/>
+			</foo>
+		</xp:context>
+		<xp:expect label="create a reference to that other namespace's schema">
+			<xs:element name="foo">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element xmlns:bar="http://www.example.com/ns/2/" ref="bar:bar"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xp:expect>
+	</xp:scenario>
+
+	<xp:scenario label="when reading mixed content">
+		<xp:scenario label="with no occurrence markup">
+			<xp:context>
+				<p>This paragraph is <b>mixed content</b> as 
+					defined by <a href="https://www.w3.org/TR/xmlschema11-1/">XML Schema</a></p>
+			</xp:context>
+			<xp:expect label="create a mixed content complexType, allowing 'a's and 'b's">
+				<xs:element name="p">
+					<xs:complexType mixed="true">
+						<xs:all>
+							<xs:element name="b" type="xs:string"/>
+							<xs:element name="a">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:string">
+											<xs:attribute name="href" type="xs:string"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:all>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with unbounded occurrence child elements, HTML style">
+			<xp:context>
+				<p>This paragraph may or may not have 
+					<b eg:occurs="*">bold</b> or <i eg:occurs="*">italic</i> text.</p>
+			</xp:context>
+			<xp:expect label="create a mixed content complexType with unbounded children (XSD 1.1 only)">
+				<xs:element name="p">
+					<xs:complexType mixed="true">
+						<xs:all>
+							<xs:element name="b" maxOccurs="unbounded" minOccurs="0" type="xs:string"/>
+							<xs:element name="i" maxOccurs="unbounded" minOccurs="0" type="xs:string"/>
+						</xs:all>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when it isn't mixed because there's a eg:content override">
+			<xp:context>
+				<foo eg:content="xsd:integer"><b>This</b> should be ignored.</foo>
+			</xp:context>
+			<xp:expect label="create an atomic-typed element">
+				<xs:element name="foo" type="xs:integer"/>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+	
+	<xp:scenario label="when doing datatype inference">
+		<xp:scenario label="on elements and attributes">
+			<xp:context>
+				<order no="1234" date="2003-02-01">
+					<quantity>1</quantity>
+					<flag>true</flag>
+					<ref>AZERTY</ref>
+					<item>Tee shirt</item>
+					<price unit="USD">10.</price>
+					<length>1.253E6</length>
+				</order>
+			</xp:context>
+			<xp:expect label="infer integers, decimals, doubles, dates, booleans, and otherwise strings">
+				<xs:element name="order">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="quantity" type="xs:integer"/>
+							<xs:element name="flag" type="xs:boolean"/>
+							<xs:element name="ref" type="xs:string"/>
+							<xs:element name="item" type="xs:string"/>
+							<xs:element name="price">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:decimal">
+											<xs:attribute name="unit" type="xs:string"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="length" type="xs:double"/>
+						</xs:sequence>
+						<xs:attribute name="no" type="xs:integer"/>
+						<xs:attribute name="date" type="xs:date"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+	
+	<xp:scenario label="when reading datatype specifications">
+		<xp:scenario label="when reading xsd types with eg:content">
+			<xp:context>
+				<order no="1234" date="2003-02-01">
+					<quantity eg:content="xsd:nonNegativeInteger">Number of ordered items</quantity>
+					<item eg:content="xsd:token">Description of the item</item>
+					<ref eg:content="xsd:token">
+						Item's reference (see the <a href="ref-list.html">reference list</a>).
+					</ref>
+					<price unit="USD" eg:content="xsd:decimal">Unit price of the item</price>
+					<annoyingElement hasAttr="true" eg:content="xsd:decimal">
+						Plus <childElement>this</childElement>
+					</annoyingElement>
+					<anotherElement eg:content="xsd:decimal">
+						<eg:attribute name="attribute">something</eg:attribute>
+						23.5
+					</anotherElement>
+				</order>
+			</xp:context>
+			<xp:expect label="ignore element contents, use eg:content to identify datatypes">
+				<xs:element name="order">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="quantity" type="xs:nonNegativeInteger"/>
+							<xs:element name="item" type="xs:token"/>
+							<xs:element name="ref" type="xs:token"/>
+							<xs:element name="price">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:decimal">
+											<xs:attribute name="unit" type="xs:string"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="annoyingElement">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:decimal">
+											<xs:attribute name="hasAttr" type="xs:boolean"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="anotherElement">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:decimal">
+											<xs:attribute name="attribute" use="required" type="xs:string"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="no" type="xs:integer"/>
+						<xs:attribute name="date" type="xs:date"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when reading datatype specifications for attributes">
+			<!-- XSpec requires curly braces to be doubled -->
+			<xp:context>
+				<order no="{{xsd:unsignedInt}}" date="2003-02-01">
+					<quantity>1</quantity>
+					<ref>AZERTY</ref>
+					<item>Tee shirt</item>
+					<price unit="{{xsd:NMTOKEN}}">10.</price>
+				</order>
+			</xp:context>
+			<xp:expect label="read them out of curly braces">
+				<xs:element name="order">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="quantity" type="xs:integer"/>
+							<xs:element name="ref" type="xs:string"/>
+							<xs:element name="item" type="xs:string"/>
+							<xs:element name="price">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:decimal">
+											<xs:attribute name="unit" type="xs:NMTOKEN"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+						<xs:attribute name="no" type="xs:unsignedInt"/>
+						<xs:attribute name="date" type="xs:date"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when reading dtd: datatypes">
+			<xp:context>
+				<library>
+					<book id="{{dtd:ID}}">
+						<title>Being a Dog Is a Full-Time Job</title>
+						<author-refs idref="{{dtd:IDREFS}}"/>
+					</book>
+					<author id="{{dtd:ID}}">
+						<name>Charles M Schulz</name>
+					</author>
+				</library>
+			</xp:context>
+			<xp:expect label="just make them xs: datatypes">
+				<xs:element name="library">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="book">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="title" type="xs:string"/>
+										<xs:element name="author-refs">
+											<xs:complexType>
+												<xs:attribute name="idref" type="xs:IDREFS"/>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+									<xs:attribute name="id" type="xs:ID"/>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="author">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="name" type="xs:string"/>
+									</xs:sequence>
+									<xs:attribute name="id" type="xs:ID"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when reading from other datatype libraries">
+			<xp:pending label="not implemented"/>
+		</xp:scenario>
+	</xp:scenario>
+	
+	<xp:scenario label="when reading eg:content models">
+		<xp:scenario label="eg:group on element content">
+			<xp:context>
+				<address eg:content="eg:group">
+					<street>1 Infinite Loop</street> 
+					<city>Cupertino</city>
+					<state>CA</state>
+					<zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="create a normal sequence">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="street" type="xs:string"/>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:group on mixed content to order child elements">
+			<!-- XSD does not preserve ordering of text nodes within mixed content -->
+			<xp:context>
+				<address eg:content="eg:group">
+					1 Infinite Loop, 
+					<city>Cupertino</city>, 
+					<state>CA</state> <zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="create a mixed content complexType with ordered children">
+				<xs:element name="address">
+					<xs:complexType mixed="true">
+						<xs:sequence>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:group on all-text content">
+			<xp:context>
+				<address eg:content="eg:group">text</address>
+			</xp:context>
+			<xp:expect label="ignore it">
+				<xs:element name="address" type="xs:string"/>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:group on all-attribute content">
+			<xp:context>
+				<address attr1="true" eg:content="eg:group">
+					<eg:attribute name="attr2">false</eg:attribute>
+				</address>
+			</xp:context>
+			<xp:expect label="ignore it">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:attribute name="attr1" type="xs:boolean" />
+						<xs:attribute name="attr2" use="required" type="xs:boolean" />
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:group on element+attribute content">
+			<xp:context>
+				<address eg:content="eg:group" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					<street>1 Infinite Loop</street> 
+					<city>Cupertino</city>
+					<state>CA</state>
+					<zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="no effect, create an ordered sequence">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="street" type="xs:string"/>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:sequence>
+						<xs:attribute name="test" type="xs:boolean"/>
+						<xs:attribute name="addressType" type="xs:string" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:group on text+attribute content">
+			<xp:context>
+				<address eg:content="eg:group" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					something
+				</address>
+			</xp:context>
+			<xp:expect label="create a simpleType extension">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="test" type="xs:boolean"/>
+								<xs:attribute name="addressType" type="xs:string" use="required"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:group on mixed content with attributes">
+			<!-- XSD does not preserve ordering of text nodes within mixed content -->
+			<xp:context>
+				<address eg:content="eg:group" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					1 Infinite Loop, 
+					<city>Cupertino</city>, 
+					<state>CA</state> <zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="create a mixed content complexType with ordered children">
+				<xs:element name="address">
+					<xs:complexType mixed="true">
+						<xs:sequence>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:sequence>
+						<xs:attribute name="test" type="xs:boolean"/>
+						<xs:attribute name="addressType" type="xs:string" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:mixed on element content">
+			<xp:context>
+				<p eg:content="eg:mixed">
+					<b eg:occurs="*">Bold text</b>
+					<a href="uri" eg:occurs="*">Hypertext link</a>
+				</p>
+			</xp:context>
+			<xp:expect label="create a mixed content complexType">
+				<xs:element name="p">
+					<xs:complexType mixed="true">
+						<xs:all>
+							<xs:element name="b" maxOccurs="unbounded" minOccurs="0" type="xs:string" />
+							<xs:element name="a" maxOccurs="unbounded" minOccurs="0">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:string">
+											<xs:attribute name="href" type="xs:string" />
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:all>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:mixed on all-text content">
+			<xp:context>
+				<p eg:content="eg:mixed">timorous text</p>
+			</xp:context>
+			<xp:expect label="ignore it, we don't know which child elements are intended">
+				<xs:element name="p" type="xs:string"/>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:mixed on element+attribute content">
+			<xp:context>
+				<address eg:content="eg:mixed" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					<street>1 Infinite Loop</street> 
+					<city>Cupertino</city>
+					<state>CA</state>
+					<zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="create a mixed content complexType">
+				<xs:element name="address">
+					<xs:complexType mixed="true">
+						<xs:all>
+							<xs:element name="street" type="xs:string"/>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:all>
+						<xs:attribute name="test" type="xs:boolean"/>
+						<xs:attribute name="addressType" type="xs:string" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:mixed on all-attribute content">
+			<xp:context>
+				<address attr1="true" eg:content="eg:mixed">
+					<eg:attribute name="attr2">false</eg:attribute>
+				</address>
+			</xp:context>
+			<xp:expect label="ignore it, we don't know which child elements are intended">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:attribute name="attr1" type="xs:boolean" />
+						<xs:attribute name="attr2" use="required" type="xs:boolean" />
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:mixed on text+attribute content">
+			<xp:context>
+				<address eg:content="eg:mixed" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					something
+				</address>
+			</xp:context>
+			<xp:expect label="ignore it, we don't know which child elements are intended">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="test" type="xs:boolean"/>
+								<xs:attribute name="addressType" type="xs:string" use="required"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:mixed on mixed content with attributes">
+			<xp:context>
+				<address eg:content="eg:mixed" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					1 Infinite Loop, 
+					<city>Cupertino</city>, 
+					<state>CA</state> <zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="redundant. create a mixed content complexType with unordered children">
+				<xs:element name="address">
+					<xs:complexType mixed="true">
+						<xs:all>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:all>
+						<xs:attribute name="test" type="xs:boolean"/>
+						<xs:attribute name="addressType" type="xs:string" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:interleave on element content">
+			<xp:context>
+				<address eg:content="eg:interleave">
+					<street>1 Infinite Loop</street> 
+					<city>Cupertino</city>
+					<state>CA</state>
+					<zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="create an unordered sequence">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:all>
+							<xs:element name="street" type="xs:string"/>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:all>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:interleave on element+attribute content">
+			<xp:context>
+				<address eg:content="eg:interleave" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					<street>1 Infinite Loop</street> 
+					<city>Cupertino</city>
+					<state>CA</state>
+					<zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="create an unordered sequence">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:all>
+							<xs:element name="street" type="xs:string"/>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:all>
+						<xs:attribute name="test" type="xs:boolean"/>
+						<xs:attribute name="addressType" type="xs:string" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:interleave on mixed content">
+			<xp:context>
+				<address eg:content="eg:interleave">
+					1 Infinite Loop, 
+					<city>Cupertino</city>, 
+					<state>CA</state> <zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="as eg:mixed, create a mixed content complexType with ordered children">
+				<xs:element name="address">
+					<xs:complexType mixed="true">
+						<xs:all>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:all>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:interleave on all-text content">
+			<xp:context>
+				<address eg:content="eg:interleave">text</address>
+			</xp:context>
+			<xp:expect label="ignore it">
+				<xs:element name="address" type="xs:string"/>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:interleave on all-attribute content">
+			<xp:context>
+				<address attr1="true" eg:content="eg:interleave">
+					<eg:attribute name="attr2">false</eg:attribute>
+				</address>
+			</xp:context>
+			<xp:expect label="no effect, just attributes">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:attribute name="attr1" type="xs:boolean" />
+						<xs:attribute name="attr2" use="required" type="xs:boolean" />
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:interleave on text+attribute content">
+			<xp:context>
+				<address eg:content="eg:interleave" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					something
+				</address>
+			</xp:context>
+			<xp:expect label="create a simpleType extension">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="test" type="xs:boolean"/>
+								<xs:attribute name="addressType" type="xs:string" use="required"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="eg:interleave on mixed content with attributes">
+			<xp:context>
+				<address eg:content="eg:interleave" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					1 Infinite Loop, 
+					<city>Cupertino</city>, 
+					<state>CA</state> <zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="redundant. create a mixed content complexType with unordered children">
+				<xs:element name="address">
+					<xs:complexType mixed="true">
+						<xs:all>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:all>
+						<xs:attribute name="test" type="xs:boolean"/>
+						<xs:attribute name="addressType" type="xs:string" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="egx:choice on element content">
+			<xp:context>
+				<foo eg:content="egx:choice">
+					<a>a string</a>
+					<b>23</b>
+				</foo>
+			</xp:context>
+			<xp:expect label="create an xs:choice complexType">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:choice>
+							<xs:element name="a" type="xs:string"/>
+							<xs:element name="b" type="xs:integer"/>
+						</xs:choice>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="egx:choice on mixed content">
+			<xp:context>
+				<foo eg:content="egx:choice">
+					Some text here
+					<a>a string</a>
+					<b>23</b>
+				</foo>
+			</xp:context>
+			<xp:expect label="create a mixed xs:choice complexType">
+				<xs:element name="foo">
+					<xs:complexType mixed="true">
+						<xs:choice>
+							<xs:element name="a" type="xs:string"/>
+							<xs:element name="b" type="xs:integer"/>
+						</xs:choice>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="egx:choice on all-text content">
+			<xp:context>
+				<foo eg:content="egx:choice">
+					Some text here
+				</foo>
+			</xp:context>
+			<xp:expect label="ignore it?">
+				<xs:element name="foo" type="xs:string"/>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="egx:choice on element+attr content">
+			<xp:context>
+				<address eg:content="egx:choice" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					<street>1 Infinite Loop</street> 
+					<city>Cupertino</city>
+					<state>CA</state>
+					<zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="create a choice of elements, with fixed attributes">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:choice>
+							<xs:element name="street" type="xs:string"/>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:choice>
+						<xs:attribute name="test" type="xs:boolean"/>
+						<xs:attribute name="addressType" type="xs:string" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="egx:choice on all-attribute content">
+			<xp:context>
+				<address attr1="true" eg:content="egx:choice">
+					<eg:attribute name="attr2">false</eg:attribute>
+				</address>
+			</xp:context>
+			<xp:expect label="ignore it">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:attribute name="attr1" type="xs:boolean" />
+						<xs:attribute name="attr2" use="required" type="xs:boolean" />
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="egx:choice on text+attribute content">
+			<xp:context>
+				<address eg:content="egx:choice" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					something
+				</address>
+			</xp:context>
+			<xp:expect label="no effect, create a simpleType extension">
+				<xs:element name="address">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="test" type="xs:boolean"/>
+								<xs:attribute name="addressType" type="xs:string" use="required"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="egx:choice on mixed content with attributes">
+			<xp:context>
+				<address eg:content="egx:choice" test="true">
+					<eg:attribute name="addressType">mailing</eg:attribute>
+					1 Infinite Loop, 
+					<city>Cupertino</city>, 
+					<state>CA</state> <zip>95014-1234</zip>
+				</address>
+			</xp:context>
+			<xp:expect label="confused. create a mixed content complexType with choice of children">
+				<xs:element name="address">
+					<xs:complexType mixed="true">
+						<xs:choice>
+							<xs:element name="city" type="xs:string"/>
+							<xs:element name="state" type="xs:string"/>
+							<xs:element name="zip" type="xs:string"/>
+						</xs:choice>
+						<xs:attribute name="test" type="xs:boolean"/>
+						<xs:attribute name="addressType" type="xs:string" use="required"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+	<!-- element-only, element+text (mixed), text-only, attr-only, element+attr, text+attr,  element+attr+text -->
+
+	<xp:scenario label="when reading eg:attribute definitions">
+		<xp:scenario label="by default">
+			<xp:context>
+				<foo>
+					<eg:attribute name="bar">1</eg:attribute>
+				</foo>
+			</xp:context>
+			<xp:expect label="create a required attribute">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:attribute name="bar" use="required" type="xs:integer"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with a namespace">
+			<xp:context>
+				<foo:foo xmlns:foo="http://example.com/ns1/">
+					<eg:attribute name="foo:bar">1</eg:attribute>
+				</foo:foo>
+			</xp:context>
+			<xp:expect label="create an attribute using the local name">
+				<xs:element name="foo" xmlns:foo="http://example.com/ns1/">
+					<xs:complexType>
+						<xs:attribute name="bar" use="required" type="xs:integer"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when using occurrences">
+			<xp:context>
+				<foo>
+					<eg:attribute name="mandatory"             >1</eg:attribute>
+					<eg:attribute name="plussed" eg:occurs="+" >1</eg:attribute>
+					<eg:attribute name="optional" eg:occurs="?">?</eg:attribute>
+					<eg:attribute name="starred" eg:occurs="*" >?</eg:attribute>
+					<eg:attribute name="minused" eg:occurs="-" >0</eg:attribute>
+				</foo>
+			</xp:context>
+			<xp:expect label="create attributes with correct cardinality">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:attribute name="mandatory" use="required" type="xs:integer"/>
+						<xs:attribute name="plussed" use="required" type="xs:integer"/>
+						<xs:attribute name="optional" type="xs:string"/>
+						<xs:attribute name="starred" type="xs:string"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when using eg:content">
+			<xp:context>
+				<foo>
+					<eg:attribute name="bar" eg:content="xsd:token">1</eg:attribute>
+					<eg:attribute name="baz" eg:content="dtd:IDREF" >1</eg:attribute>
+				</foo>
+			</xp:context>
+			<xp:expect label="create attributes with the correct type">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:attribute name="bar" use="required" type="xs:token"/>
+						<xs:attribute name="baz" use="required" type="xs:IDREF"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when using eg:content incorrectly">
+			<xp:context>
+				<foo>
+					<eg:attribute name="bar" eg:content="eg:group">1</eg:attribute>
+					<eg:attribute name="baz" eg:content="eg:mixed">1</eg:attribute>
+					<eg:attribute name="qux" eg:content="eg:interleave">1</eg:attribute>
+					<eg:attribute name="quux" eg:content="egx:choice">1</eg:attribute>
+				</foo>
+			</xp:context>
+			<xp:expect label="ignore it">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:attribute name="bar" use="required" type="xs:integer"/>
+						<xs:attribute name="baz" use="required" type="xs:integer"/>
+						<xs:attribute name="qux" use="required" type="xs:integer"/>
+						<xs:attribute name="quux" use="required" type="xs:integer"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when using eg:attribute as root">
+			<xp:context>
+				<eg:attribute name="bar">1</eg:attribute>				
+			</xp:context>
+			<xp:expect label="create it as root">
+				<xs:attribute name="bar" use="required" type="xs:integer"/>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+	
+	<xp:scenario label="when reading schemas with definitions">
+		<xp:scenario label="by default">
+			<xp:context href="eg-test-xml/test_defines.xml"/>
+			<xp:expect label="create types for each eg:define, and reference from each eg:content">
+				<xs:schema xmlns:pkg="http://expath.org/ns/pkg" xmlns:impl="urn:x-xspec:compile:xslt:impl" xmlns:eg="http://examplotron.org/0/" xmlns:egx="http://accuity.com/egx/0/" elementFormDefault="qualified">
+					<xs:element name="foo">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="elementWithAtomicType" type="type1"/>
+								<xs:element name="elementWithSpecifiedType" type="type2"/>
+								<xs:element name="elementWithElementalType" type="type3"/>
+								<xs:element name="elementWithMixedType" type="type4"/>
+								<xs:element name="elementWithEnumType" type="type5"/>
+								<xs:element name="elementWithPatternType" type="type6"/>
+								<xs:element name="attributeHolder">
+									<xs:complexType>
+										<xs:simpleContent>
+											<xs:extension base="xs:string">
+												<xs:attribute name="attributeWithAtomicType" use="required" type="type7"/>
+												<xs:attribute name="attributeWithSpecifiedType" use="required" type="type8"/>
+												<xs:attribute name="attributeWithEnumType" use="required" type="type9"/>
+												<xs:attribute name="attributeWithPatternType" use="required" type="typeA"/>
+											</xs:extension>
+										</xs:simpleContent>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:simpleType name="type1">
+						<xs:restriction base="xs:integer"/>
+					</xs:simpleType>
+					<xs:simpleType name="type2">
+						<xs:restriction base="xs:nonNegativeInteger"/>
+					</xs:simpleType>
+					<xs:complexType name="type3">
+						<xs:sequence>
+							<xs:element name="child" type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+					<xs:complexType name="type4" mixed="true">
+						<xs:all>
+							<xs:element name="tagged" type="xs:string"/>
+						</xs:all>
+					</xs:complexType>
+					<xs:simpleType name="type5">
+						<xs:restriction base="xs:integer">
+							<xs:enumeration value="1"/>
+							<xs:enumeration value="2"/>
+							<xs:enumeration value="3"/>
+						</xs:restriction>
+					</xs:simpleType>
+					<xs:simpleType name="type6">
+						<xs:restriction base="xs:string">
+							<xs:pattern value="a+b+c+"/>
+						</xs:restriction>
+					</xs:simpleType>
+					<xs:simpleType name="type7">
+						<xs:restriction base="xs:integer"/>
+					</xs:simpleType>
+					<xs:simpleType name="type8">
+						<xs:restriction base="xs:nonNegativeInteger"/>
+					</xs:simpleType>
+					<xs:simpleType name="type9">
+						<xs:restriction base="xs:integer">
+							<xs:enumeration value="7"/>
+							<xs:enumeration value="8"/>
+							<xs:enumeration value="9"/>
+						</xs:restriction>
+					</xs:simpleType>
+					<xs:simpleType name="typeA">
+						<xs:restriction base="xs:string">
+							<xs:pattern value="a+b+c+"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:schema>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with namespaces">
+			<xp:context href="eg-test-xml/test_defines_with_namespace.xml"/>
+			<xp:expect label="references contain namespace prefix, namespace prefix resolves, QNames don't contain colons">
+				<xs:schema elementFormDefault="qualified" 
+					xmlns:xs="http://www.w3.org/2001/XMLSchema"
+					targetNamespace="http://example.com/namespace1/"
+					xmlns:a="http://example.com/namespace1/">
+					<xs:element name="foo">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="elementDefiningNamespacedType" type="a:namespacedType"/>
+								<xs:element name="elementUsingNamespacedType" type="a:namespacedType"/>
+								<xs:element name="attributeHolder">
+									<xs:complexType>
+										<xs:simpleContent>
+											<xs:extension base="xs:string">
+												<xs:attribute name="attributeDefiningNamespacedType" use="required" type="a:attributeType"/>
+												<xs:attribute name="attributeUsingNamespacedType" use="required" type="a:attributeType"/>
+											</xs:extension>
+										</xs:simpleContent>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:simpleType name="attributeType">
+						<xs:restriction base="xs:date"/>
+					</xs:simpleType>
+					<xs:simpleType name="namespacedType">
+						<xs:restriction base="xs:integer"/>
+					</xs:simpleType>
+				</xs:schema>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when type definitions are mostly enums">
+			<xp:context href="eg-test-xml/test_defines_with_enums.xml"/>
+			<xp:expect label="create types for each eg:define, and reference from each eg:content">
+				<xs:schema elementFormDefault="qualified">
+					<xs:element name="foo">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="elementDef" type="enumType"/>
+								<xs:element name="elementRef" type="enumType"/>
+								<xs:element name="elementWithDefinitionAndEnum" type="elementWithEnumDef"/>
+								<xs:element name="elementWithContentAndEnum" type="elementWithEnumDef"/>
+								<xs:element name="elementWithAttributes">
+									<xs:complexType>
+										<xs:attribute name="attributeWithEnumDef" use="required" type="enumAttType"/>
+										<xs:attribute name="attributeWithEnumRef" use="required" type="enumAttType"/>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:complexType name="elementWithEnumDef">
+						<xs:simpleContent>
+							<xs:restriction base="xs:anyType">
+								<xs:simpleType>
+									<xs:restriction base="xs:token">
+										<xs:enumeration value="a"/>
+										<xs:enumeration value="b"/>
+										<xs:enumeration value="c"/>
+									</xs:restriction>
+								</xs:simpleType>
+								<xs:attribute name="theAttribute" type="xs:string"/>
+							</xs:restriction>
+						</xs:simpleContent>
+					</xs:complexType>
+					<xs:simpleType name="enumAttType">
+						<xs:restriction base="xs:token">
+							<xs:enumeration value="z"/>
+							<xs:enumeration value="y"/>
+							<xs:enumeration value="x"/>
+						</xs:restriction>
+					</xs:simpleType>
+					<xs:simpleType name="enumType">
+						<xs:restriction base="xs:token">
+							<xs:enumeration value="m"/>
+							<xs:enumeration value="n"/>
+							<xs:enumeration value="p"/>
+							<xs:enumeration value="q"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:schema>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when type definitions are mostly patterns">
+			<xp:context href="eg-test-xml/test_defines_with_patterns.xml"/>
+			<xp:expect label="create types for each eg:define, and reference from each eg:content">
+				<xs:schema elementFormDefault="qualified">
+					<xs:element name="foo">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="elementDef" type="regexpType"/>
+								<xs:element name="elementRef" type="regexpType"/>
+								<xs:element name="elementWithDefinitionAndRegexp" type="elementWithRegexpDef"/>
+								<xs:element name="elementWithContentOfRegexp" type="elementWithRegexpDef"/>
+								<xs:element name="elementWith">
+									<xs:complexType>
+										<xs:attribute name="attributeWithRegexpDef" use="required" type="regexpAttType"/>
+										<xs:attribute name="attributeWithRegexpRef" use="required" type="regexpAttType"/>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:complexType name="elementWithRegexpDef">
+						<xs:simpleContent>
+							<xs:restriction base="xs:anyType">
+								<xs:simpleType>
+									<xs:restriction base="xs:string">
+										<xs:pattern value="z[aeiou]+"/>
+									</xs:restriction>
+								</xs:simpleType>
+								<xs:attribute name="theAttribute" type="xs:string"/>
+							</xs:restriction>
+						</xs:simpleContent>
+					</xs:complexType>
+					<xs:simpleType name="regexpAttType">
+						<xs:restriction base="xs:string">
+							<xs:pattern value="13245"/>
+						</xs:restriction>
+					</xs:simpleType>
+					<xs:simpleType name="regexpType">
+						<xs:restriction base="xs:string">
+							<xs:pattern value="..."/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:schema>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when definitions have documentation">
+			<xp:context href="eg-test-xml/test_defines_with_docs.xml"/>
+			<xp:expect label="create defines with docs in element, not type def">
+				<xs:schema xmlns:pkg="http://expath.org/ns/pkg" xmlns:impl="urn:x-xspec:compile:xslt:impl" xmlns:eg="http://examplotron.org/0/" xmlns:egx="http://accuity.com/egx/0/" elementFormDefault="qualified">
+					<xs:element name="foo">
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="elementWithAtomicType" type="type1">
+									<xs:annotation>
+										<xs:documentation>elementWithAtomicType</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+								<xs:element name="elementWithSpecifiedType" type="type2">
+									<xs:annotation>
+										<xs:documentation>elementWithSpecifiedType</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+								<xs:element name="elementWithElementalType" type="type3">
+									<xs:annotation>
+										<xs:documentation>elementWithElementalType</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+								<xs:element name="elementWithMixedType" type="type4">
+									<xs:annotation>
+										<xs:documentation>elementWithMixedType</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+								<xs:element name="elementWithEnumType" type="type5">
+									<xs:annotation>
+										<xs:documentation>elementWithEnumType</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+								<xs:element name="elementWithPatternType" type="type6">
+									<xs:annotation>
+										<xs:documentation>elementWithPatternType</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+								<xs:element name="attributeHolder">
+									<xs:complexType>
+										<xs:simpleContent>
+											<xs:extension base="xs:string">
+												<xs:attribute name="attributeWithAtomicType" use="required" type="type7">
+													<xs:annotation>
+														<xs:documentation>attributeWithAtomicType</xs:documentation>
+													</xs:annotation>
+												</xs:attribute>
+												<xs:attribute name="attributeWithSpecifiedType" use="required" type="type8">
+													<xs:annotation>
+														<xs:documentation>attributeWithSpecifiedType</xs:documentation>
+													</xs:annotation>
+												</xs:attribute>
+												<xs:attribute name="attributeWithEnumType" use="required" type="type9">
+													<xs:annotation>
+														<xs:documentation>attributeWithEnumType</xs:documentation>
+													</xs:annotation>
+												</xs:attribute>
+												<xs:attribute name="attributeWithPatternType" use="required" type="typeA">
+													<xs:annotation>
+														<xs:documentation>attributeWithPatternType</xs:documentation>
+													</xs:annotation>
+												</xs:attribute>
+											</xs:extension>
+										</xs:simpleContent>
+									</xs:complexType>
+								</xs:element>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:simpleType name="type1">
+						<xs:restriction base="xs:integer"/>
+					</xs:simpleType>
+					<xs:simpleType name="type2">
+						<xs:restriction base="xs:nonNegativeInteger"/>
+					</xs:simpleType>
+					<xs:complexType name="type3">
+						<xs:sequence>
+							<xs:element name="child" type="xs:string">
+								<xs:annotation>
+									<xs:documentation>childElementDocs</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+					<xs:complexType name="type4" mixed="true">
+						<xs:all>
+							<xs:element name="tagged" type="xs:string"/>
+						</xs:all>
+					</xs:complexType>
+					<xs:simpleType name="type5">
+						<xs:restriction base="xs:integer">
+							<xs:enumeration value="1"/>
+							<xs:enumeration value="2"/>
+							<xs:enumeration value="3"/>
+						</xs:restriction>
+					</xs:simpleType>
+					<xs:simpleType name="type6">
+						<xs:restriction base="xs:string">
+							<xs:pattern value="a+b+c+"/>
+						</xs:restriction>
+					</xs:simpleType>
+					<xs:simpleType name="type7">
+						<xs:restriction base="xs:integer"/>
+					</xs:simpleType>
+					<xs:simpleType name="type8">
+						<xs:restriction base="xs:nonNegativeInteger"/>
+					</xs:simpleType>
+					<xs:simpleType name="type9">
+						<xs:restriction base="xs:integer">
+							<xs:enumeration value="7"/>
+							<xs:enumeration value="8"/>
+							<xs:enumeration value="9"/>
+						</xs:restriction>
+					</xs:simpleType>
+					<xs:simpleType name="typeA">
+						<xs:restriction base="xs:string">
+							<xs:pattern value="a+b+c+"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:schema>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+	
+	<xp:scenario label="when reading stuff with assertions">
+		<xp:scenario label="assertion on element">
+			<xp:context>
+				<foo eg:assert="sum(percent)=100">
+					<percent eg:occurs="+">100</percent>
+				</foo>
+			</xp:context>
+			<xp:expect label="create element with assertion">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="percent" maxOccurs="unbounded" type="xs:integer"/>
+						</xs:sequence>
+						<xs:assert test="sum(percent)=100"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="assertion on namespaced element" pending="Not sure this is meaningful"/>
+	</xp:scenario>
+	
+	<xp:scenario label="when reading stuff with default values">
+		<xp:scenario label="on attributes">
+			<xp:context>
+				<foo bar="[my default value]"/>
+			</xp:context>
+			<xp:expect label="create attribute with default value">
+				<xs:element name="foo">
+					<xs:complexType>
+						<xs:attribute default="my default value" name="bar" type="xs:string"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="on attributes, with type detection">
+			<xp:context>
+				<defaults 
+					integer="[1]" decimal="[-120.4]" double="[1.8E10]" 
+					date="[2013-08-21]" dateTime="[2013-08-21T19:04:32]" time="[19:04:48]" 
+					boolean="[true]"/>
+			</xp:context>
+			<xp:expect label="create attribute with default value">
+				<xs:element name="defaults">
+					<xs:complexType>
+						<xs:attribute default="1" name="integer" type="xs:integer"/>
+						<xs:attribute default="-120.4" name="decimal" type="xs:decimal"/>
+						<xs:attribute default="1.8E10" name="double" type="xs:double"/>
+						<xs:attribute default="2013-08-21" name="date" type="xs:date"/>
+						<xs:attribute default="2013-08-21T19:04:32" name="dateTime" type="xs:dateTime"/>
+						<xs:attribute default="19:04:48" name="time" type="xs:time"/>
+						<xs:attribute default="true" name="boolean" type="xs:boolean"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="on mandatory attributes, with type detection/specification">
+			<xp:context>
+				<defaults>
+					<eg:attribute name="integer">[-1]</eg:attribute>
+					<eg:attribute name="decimal" eg:content="xsd:decimal">[-1]</eg:attribute>
+					<eg:attribute name="optionalInteger" eg:occurs="?">[-1]</eg:attribute>
+				</defaults>
+			</xp:context>
+			<xp:expect label="not permitted, ignore defaults">
+				<xs:element name="defaults">
+					<xs:complexType>
+						<xs:attribute name="integer" use="required" type="xs:integer"/>
+						<xs:attribute name="decimal" use="required" type="xs:decimal"/>
+						<xs:attribute name="optionalInteger" default="-1" type="xs:integer"/>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="on elements, with type detection">
+			<xp:context>
+				<use-at-your-own-risk>
+					<integer>[-1]</integer>
+					<decimal eg:content="xsd:decimal">[-1]</decimal>
+					<whatever>[A default value.]</whatever>
+				</use-at-your-own-risk>
+			</xp:context>
+			<xp:expect label="create elements with default value (?!)">
+				<xs:element name="use-at-your-own-risk">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="integer" default="-1" type="xs:integer"/>
+							<xs:element name="decimal" default="-1" type="xs:decimal"/>
+							<xs:element name="whatever" default="A default value." type="xs:string"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="on elements with attributes">
+			<xp:context>
+				<use-at-your-own-risk>
+					<integer attr="true">[-1]</integer>
+				</use-at-your-own-risk>
+			</xp:context>
+			<xp:expect label="create elements with default value and attribute">
+				<xs:element name="use-at-your-own-risk">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="integer" default="-1">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:integer">
+											<xs:attribute name="attr" type="xs:boolean"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="on elements with mandatory attributes">
+			<xp:context>
+				<use-at-your-own-risk>
+					<integer attr1="true">
+						<eg:attribute name="attr2">false</eg:attribute>
+						[-1]
+					</integer>
+				</use-at-your-own-risk>
+			</xp:context>
+			<xp:expect label="create elements with default value and attributes">
+				<xs:element name="use-at-your-own-risk">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="integer" default="-1">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:integer">
+											<xs:attribute name="attr1" type="xs:boolean"/>
+											<xs:attribute name="attr2" use="required" type="xs:boolean"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="on elements with mixed content">
+			<xp:context>
+				<use-at-your-own-risk>
+					This is an: <integer attr="true">[-1]</integer>
+				</use-at-your-own-risk>
+			</xp:context>
+			<xp:expect label="create elements with default value and attribute">
+				<xs:element name="use-at-your-own-risk">
+					<xs:complexType mixed="true">
+						<xs:all>
+							<xs:element name="integer" default="-1">
+								<xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:integer">
+											<xs:attribute name="attr" type="xs:boolean"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
+							</xs:element>
+						</xs:all>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+	
+	<xp:scenario label="when reading stuff with documentation">
+		<xp:scenario label="when element has docs">
+			<xp:context>
+				<foo>
+					<egx:docs>An element</egx:docs>
+				</foo>
+			</xp:context>
+			<xp:expect label="element definition with docs">
+				<xs:element name="foo">
+					<xs:annotation>
+						<xs:documentation>An element</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when element has docs, type inference">
+			<xp:context>
+				<foo>
+					<egx:docs>An element</egx:docs>
+					23
+				</foo>
+			</xp:context>
+			<xp:expect label="element definition with docs">
+				<xs:element name="foo" type="xs:integer">
+					<xs:annotation>
+						<xs:documentation>An element</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when element has docs, type specified">
+			<xp:context>
+				<foo eg:content="dtd:ID">
+					<egx:docs>An element</egx:docs>
+					23
+				</foo>
+			</xp:context>
+			<xp:expect label="element definition with docs">
+				<xs:element name="foo" type="xs:ID">
+					<xs:annotation>
+						<xs:documentation>An element</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when element has docs, and attributes">
+			<xp:context>
+				<foo attribute1="true" attribute2="true">
+					<egx:docs>An element</egx:docs>
+					23
+				</foo>
+			</xp:context>
+			<xp:expect label="element definition with docs">
+				<xs:element name="foo">
+					<xs:annotation>
+						<xs:documentation>An element</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:integer">
+								<xs:attribute name="attribute1" type="xs:boolean"/>
+								<xs:attribute name="attribute2"	type="xs:boolean"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when element has docs, and mandatory attribute">
+			<xp:context>
+				<foo>
+					<egx:docs>An element</egx:docs>
+					<eg:attribute name="attribute">true</eg:attribute>
+					23
+				</foo>
+			</xp:context>
+			<xp:expect label="element definition with docs">
+				<xs:element name="foo">
+					<xs:annotation>
+						<xs:documentation>An element</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:integer">
+								<xs:attribute name="attribute" use="required" type="xs:boolean" />
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="when element has docs, and mandatory attribute, and default">
+			<xp:context>
+				<foo>
+					<egx:docs>An element</egx:docs>
+					<eg:attribute name="attribute">true</eg:attribute>
+					[23]
+				</foo>
+			</xp:context>
+			<xp:expect label="element definition with docs">
+				<xs:element name="foo" default="23">
+					<xs:annotation>
+						<xs:documentation>An element</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:integer">
+								<xs:attribute name="attribute" use="required" type="xs:boolean"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+	
+	<xp:scenario label="when reading stuff with enums">
+		<xp:scenario label="from element">
+			<xp:context>
+				<element>|a|b|c|</element>
+			</xp:context>
+			<xp:expect label="an element enumeration">
+				<xs:element name="element">
+					<xs:simpleType>
+						<xs:restriction base="xs:token">
+							<xs:enumeration value="a"/>
+							<xs:enumeration value="b"/>
+							<xs:enumeration value="c"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="from element, with type detection">
+			<xp:context>
+				<element>|1|2|3|</element>
+			</xp:context>
+			<xp:expect label="an element enumeration">
+				<xs:element name="element">
+					<xs:simpleType>
+						<xs:restriction base="xs:integer">
+							<xs:enumeration value="1"/>
+							<xs:enumeration value="2"/>
+							<xs:enumeration value="3"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="from element, with type specification">
+			<xp:context>
+				<element eg:content="xsd:decimal">|1|2|3|</element>
+			</xp:context>
+			<xp:expect label="an element enumeration">
+				<xs:element name="element">
+					<xs:simpleType>
+						<xs:restriction base="xs:decimal">
+							<xs:enumeration value="1"/>
+							<xs:enumeration value="2"/>
+							<xs:enumeration value="3"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="from element, with type detection and attribute, and docs">
+			<xp:context>
+				<element attr="true">
+					<egx:docs>element</egx:docs>
+					|1|2|3|
+				</element>
+			</xp:context>
+			<xp:expect label="an element enumeration">
+				<xs:element name="element">
+					<xs:annotation>
+						<xs:documentation>element</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:restriction base="xs:anyType">
+								<xs:simpleType>
+									<xs:restriction base="xs:integer">
+										<xs:enumeration value="1"/>
+										<xs:enumeration value="2"/>
+										<xs:enumeration value="3"/>
+									</xs:restriction>
+								</xs:simpleType>
+								<xs:attribute name="attr" type="xs:boolean"/>
+							</xs:restriction>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="from attribute, with type detection">
+			<xp:context>
+				<element attribute="|1|2|3|"/>
+			</xp:context>
+			<xp:expect label="an attribute enumeration">
+				<xs:element name="element">
+					<xs:complexType>
+						<xs:attribute name="attribute">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+									<xs:enumeration value="3"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="from mandatory attribute, with type detection">
+			<xp:context>
+				<element>
+					<eg:attribute name="attribute">|1|2|3|</eg:attribute>
+				</element>
+			</xp:context>
+			<xp:expect label="an attribute enumeration">
+				<xs:element name="element">
+					<xs:complexType>
+						<xs:attribute name="attribute" use="required">
+							<xs:simpleType>
+								<xs:restriction base="xs:integer">
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+									<xs:enumeration value="3"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="from mandatory attribute with type specification">
+			<xp:context>
+				<element>
+					<eg:attribute name="attribute" eg:content="xsd:decimal">|1|2|3|</eg:attribute>
+				</element>
+			</xp:context>
+			<xp:expect label="an attribute enumeration">
+				<xs:element name="element">
+					<xs:complexType>
+						<xs:attribute name="attribute" use="required">
+							<xs:simpleType>
+								<xs:restriction base="xs:decimal">
+									<xs:enumeration value="1"/>
+									<xs:enumeration value="2"/>
+									<xs:enumeration value="3"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+	
+	<xp:scenario label="when reading stuff with regex">
+		<xp:scenario label="from element">
+			<xp:context>
+				<element>/abc+/</element>
+			</xp:context>
+			<xp:expect label="an element with pattern restriction">
+				<xs:element name="element">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:pattern value="abc+"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="from element, with type specification">
+			<xp:context>
+				<element eg:content="xsd:decimal">/1[08]+/</element>
+			</xp:context>
+			<xp:expect label="a typed element with pattern restriction">
+				<xs:element name="element">
+					<xs:simpleType>
+						<xs:restriction base="xs:decimal">
+							<xs:pattern value="1[08]+"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="from element, with type specification, and attributes, and docs">
+			<xp:context>
+				<element attr1="true" eg:content="xsd:decimal">
+					<eg:attribute name="attr2">false</eg:attribute>
+					<egx:docs>element</egx:docs>
+					/1[^7]*/
+				</element>
+			</xp:context>
+			<xp:expect label="an element with pattern restriction and attributes">
+				<xs:element name="element">
+					<xs:annotation>
+						<xs:documentation>element</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:restriction base="xs:anyType">
+								<xs:simpleType>
+									<xs:restriction base="xs:decimal">
+										<xs:pattern value="1[^7]*"/>
+									</xs:restriction>
+								</xs:simpleType>
+								<xs:attribute name="attr1" type="xs:boolean"/>
+								<xs:attribute name="attr2" use="required" type="xs:boolean"/>
+							</xs:restriction>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="from mandatory attribute with type specification">
+			<xp:context>
+				<element>
+					<eg:attribute name="attribute" eg:content="xsd:decimal">/1[23]+/</eg:attribute>
+				</element>
+			</xp:context>
+			<xp:expect label="an attribute with pattern restriction">
+				<xs:element name="element">
+					<xs:complexType>
+						<xs:attribute name="attribute" use="required">
+							<xs:simpleType>
+								<xs:restriction base="xs:decimal">
+									<xs:pattern value="1[23]+"/>
+								</xs:restriction>
+							</xs:simpleType>
+						</xs:attribute>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+	
+	<xp:scenario label="when embedding xs elements">
+		<xp:scenario label="at the root">
+			<xp:context>
+				<xs:choice minOccurs="0">
+					<elementOne>23</elementOne>
+					<elementTwo>1999-12-31</elementTwo>
+				</xs:choice>
+			</xp:context>
+			<xp:expect label="copy the xs:element and child attributes">
+				<xs:choice minOccurs="0">
+					<xs:element name="elementOne" type="xs:integer"/>
+					<xs:element name="elementTwo" type="xs:date"/>
+				</xs:choice>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="not at the root">
+			<xp:context>
+				<elementZero>
+					<xs:choice minOccurs="0">
+						<elementOne>23</elementOne>
+						<elementTwo>1999-12-31</elementTwo>
+					</xs:choice>
+				</elementZero>
+			</xp:context>
+			<xp:expect label="copy the xs:element and child attributes">
+				<xs:element name="elementZero">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:choice minOccurs="0">
+								<xs:element name="elementOne" type="xs:integer"/>
+								<xs:element name="elementTwo" type="xs:date"/>
+							</xs:choice>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+
+	<xp:scenario label="when calling checkType">
+		<xp:call template="eg:checkType">
+			<xp:param name="enum" select="'false'"/>
+		</xp:call>
+		<xp:scenario label="with Boolean false">
+			<xp:call>
+				<xp:param name="val" select="'false'"/>
+			</xp:call>
+			<xp:expect label="Boolean should be detected">xs:boolean</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with Boolean true">
+			<xp:call>
+				<xp:param name="val" select="'true'"/>
+			</xp:call>
+			<xp:expect label="Boolean should be detected">xs:boolean</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with a date">
+			<xp:call>
+				<xp:param name="val" select="'2001-12-24'"/>
+			</xp:call>
+			<xp:expect label="date should be detected">xs:date</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with a dateTime">
+			<xp:call>
+				<xp:param name="val" select="'2001-12-24T00:12:23Z'"/>
+			</xp:call>
+			<xp:expect label="dateTime should be detected">xs:dateTime</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with a time">
+			<xp:call>
+				<xp:param name="val" select="'00:12:23-08:00'"/>
+			</xp:call>
+			<xp:expect label="time should be detected">xs:time</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with an integer">
+			<xp:call template="eg:checkType">
+				<xp:param name="val" select="23"/>
+			</xp:call>
+			<xp:expect label="integer should be detected">xs:integer</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with a decimal">
+			<xp:call template="eg:checkType">
+				<xp:param name="val" select="'23.4581'"/>
+			</xp:call>
+			<xp:expect label="decimal should be detected">xs:decimal</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with a double">
+			<xp:call template="eg:checkType">
+				<xp:param name="val" select="'23.5E81'"/>
+			</xp:call>
+			<xp:expect label="double should be detected">xs:double</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with a failed double">
+			<xp:call template="eg:checkType">
+				<xp:param name="val" select="'23E81.5'"/>
+			</xp:call>
+			<xp:expect label="string should be detected">xs:string</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with some other string">
+			<xp:call>
+				<xp:param name="val" select="'someotherstring'"/>
+			</xp:call>
+			<xp:expect label="string should be detected">xs:string</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with some other string, as an enum member">
+			<xp:call>
+				<xp:param name="val" select="'someotherstring'"/>
+				<xp:param name="enum" select="'true'"/>
+			</xp:call>
+			<xp:expect label="token should be detected">xs:token</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with some other string, as an enum member">
+			<xp:call>
+				<xp:param name="val" select="'someotherstring'"/>
+				<xp:param name="enum" select="'true'"/>
+			</xp:call>
+			<xp:expect label="token should be detected">xs:token</xp:expect>
+		</xp:scenario>
+	</xp:scenario>
+
+</xp:description>

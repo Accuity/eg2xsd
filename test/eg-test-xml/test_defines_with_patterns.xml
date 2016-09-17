@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<foo xmlns:eg="http://examplotron.org/0/">
+	<elementDef eg:define="regexpType">/.../</elementDef>
+	<elementRef eg:content="regexpType"/>
+    <elementWithDefinitionAndRegexp eg:define="elementWithRegexpDef" theAttribute="this">/z[aeiou]+/</elementWithDefinitionAndRegexp>
+    <elementWithContentOfRegexp eg:content="elementWithRegexpDef">something</elementWithContentOfRegexp>
+	<elementWith>
+		<eg:attribute name="attributeWithRegexpDef" eg:define="regexpAttType">/13245/</eg:attribute>
+		<eg:attribute name="attributeWithRegexpRef" eg:content="regexpAttType"/>
+	</elementWith>
+</foo>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<foo xmlns:eg="http://examplotron.org/0/">
+	<elementDef eg:define="enumType">|m|n|p|q|</elementDef>
+	<elementRef eg:content="enumType"/>
+    <elementWithDefinitionAndEnum eg:define="elementWithEnumDef" theAttribute="this">|a|b|c|</elementWithDefinitionAndEnum>
+	<elementWithContentAndEnum eg:content="elementWithEnumDef">|1|2|3|4|5|</elementWithContentAndEnum>
+	<elementWithAttributes>
+		<eg:attribute name="attributeWithEnumDef" eg:define="enumAttType">|z|y|x|</eg:attribute>
+		<eg:attribute name="attributeWithEnumRef" eg:content="enumAttType"/>
+	</elementWithAttributes>
+</foo>

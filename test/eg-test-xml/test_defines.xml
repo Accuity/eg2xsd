@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<foo xmlns:eg="http://examplotron.org/0/"
+	xmlns:egx="http://accuity.com/egx/0/">
+	<elementWithAtomicType eg:define="type1">234</elementWithAtomicType>
+	<elementWithSpecifiedType eg:define="type2" eg:content="xsd:nonNegativeInteger">234</elementWithSpecifiedType>
+	<elementWithElementalType eg:define="type3"><child>a</child></elementWithElementalType>
+	<elementWithMixedType eg:define="type4">some <tagged>text</tagged></elementWithMixedType>
+	<elementWithEnumType eg:define="type5">|1|2|3|</elementWithEnumType>
+	<elementWithPatternType eg:define="type6">/a+b+c+/</elementWithPatternType>
+	<attributeHolder>
+		<eg:attribute name="attributeWithAtomicType" eg:define="type7">789</eg:attribute>
+		<eg:attribute name="attributeWithSpecifiedType" eg:define="type8" eg:content="xsd:nonNegativeInteger">789</eg:attribute>
+		<eg:attribute name="attributeWithEnumType" eg:define="type9">|7|8|9|</eg:attribute>
+		<eg:attribute name="attributeWithPatternType" eg:define="typeA">/a+b+c+/</eg:attribute>
+		something
+	</attributeHolder>
+</foo>
