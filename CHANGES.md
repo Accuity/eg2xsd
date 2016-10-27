@@ -45,7 +45,7 @@ referencing foreign namespaces in assertions or datatypes.
 XSD's handling of mixed content is different to that of RNG. In 
 particular:
 
-1. Mixed content may be 'sequential' as well as interleaved. This
+\1. Mixed content may be 'sequential' as well as interleaved. This
 transform assumes mixed content is intended to be interleaved, as in
 RelaxNG schemas.
 
@@ -68,7 +68,7 @@ RelaxNG schemas.
 </xs:schema>
 ```
  
-2. Nodes of 1-or-more cardinality cannot appear in interleaved 
+\2. Nodes of 1-or-more cardinality cannot appear in interleaved 
 content, including mixed interleaved content, in XSD 1.0. 
 eg2xsd will still create them if requested, but the resulting schema
 will be XSD 1.1.
@@ -98,7 +98,7 @@ will be XSD 1.1.
 </xs:schema>
 ```
 
-3. XSD does not support the ordering of text nodes within mixed 
+\3. XSD does not support the ordering of text nodes within mixed 
 content, so the eg:content="eg:group" only imposes an ordering on the
 child elements within such a group. If an ordering is imposed, then 
 
@@ -126,7 +126,7 @@ child elements within such a group. If an ordering is imposed, then
 ## Additional Functionality ##
 
 Additional features are defined in the egx namespace
-```xmlns:egx="http://accuity.com/egx/0/"```
+`xmlns:egx="http://accuity.com/egx/0/"`
 
 ### Choice Model ###
 To augment the existing content model options, 'egx:choice' is 

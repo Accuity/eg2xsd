@@ -10,13 +10,11 @@ Examplotron schema language, as of
 [v0.8](http://examplotron.org/0/8/) (21 August 2013), and then
 add a few extensions not present in the canonical Examplotron.
 
-For compatibility, it reads the Examplotron v0.* namespace:
-
-```xmlns:eg="http://examplotron.org/0/"```
+For compatibility, it reads the Examplotron v0.* namespace: 
+`xmlns:eg="http://examplotron.org/0/"`
 
 Extensions use the extension namespace:
-
-```xmlns:egx="http://accuity.com/egx/0/"```
+`xmlns:egx="http://accuity.com/egx/0/"`
 
 For most input, this transform will produce a XSD 1.0 compliant
 schema. Known exceptions are: 
@@ -45,8 +43,8 @@ For all changes and extensions, see CHANGES.md
 test/eg2xsd.xspec describes test scenarios that can be run using the
 [XSpec](https://github.com/expath/xspec) testing framework.
 
-```xspec.sh test/eg2xsd.xspec``` on Mac/Linux, or 
-```xspec.bat test\eg2xsd.xspec``` on Windows
+`xspec.sh test/eg2xsd.xspec` on Mac/Linux, or 
+`xspec.bat test\eg2xsd.xspec` on Windows
 
 ## To Do ##
 
