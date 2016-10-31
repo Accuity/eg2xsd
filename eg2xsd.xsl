@@ -31,6 +31,7 @@ Extensions use the extension namespace:
 	<xsl:output method="xml" version="1.0" encoding="UTF-8" indent="yes"/>
 	<xsl:strip-space elements="*"/>
 	<xsl:variable name="eg-uri" select="'http://examplotron.org/0/'"/>
+	<xsl:variable name="egx-uri" select="'http://accuity.com/egx/0/'"/>
 	<xsl:variable name="Header" select="'0.8'"/>
 
 	<xsl:template match="/">
@@ -214,7 +215,7 @@ Extensions use the extension namespace:
 				<xsl:apply-templates select="egx:docs" mode="eg:docs"/>
 				<xsl:apply-templates select="." mode="eg:elt-complex-type"/>
 			</xsl:when>
-			<xsl:when test="eg:attribute or @*[namespace-uri() != $eg-uri]">
+			<xsl:when test="eg:attribute or @*[namespace-uri() != $eg-uri and namespace-uri() != $egx-uri]">
 				<xsl:apply-templates select="egx:docs" mode="eg:docs"/>
 				<xsl:apply-templates select="." mode="eg:elt-complex-type"/>
 			</xsl:when>
@@ -251,7 +252,7 @@ Extensions use the extension namespace:
 				and not(starts-with(@eg:content, 'xsd:') or starts-with(@eg:content, 'dtd:'))">
 				<xsl:apply-templates select="." mode="eg:def-complex-type"/>
 			</xsl:when>
-			<xsl:when test="eg:attribute or @*[namespace-uri() != $eg-uri]">
+			<xsl:when test="eg:attribute or @*[namespace-uri() != $eg-uri and namespace-uri() != $egx-uri]">
 				<xsl:apply-templates select="." mode="eg:def-complex-type"/>
 			</xsl:when>
 			<xsl:when test="text() and $restriction = 'true'">
