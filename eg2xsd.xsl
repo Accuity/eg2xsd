@@ -157,6 +157,8 @@ Extensions use the extension namespace:
 		</xsl:copy>
 	</xsl:template>
 
+	<xsl:template match="xs:anyAttribute" mode="eg:elt-real"/>
+
 	<!-- Element occurrences -->
 	<xsl:template match="*[@eg:occurs='?']" mode="eg:elt-occurs">
 		<xsl:attribute name="minOccurs">0</xsl:attribute>
@@ -292,7 +294,7 @@ Extensions use the extension namespace:
 
 	<!-- Attributes only -->
 	<xsl:template match="*[not(*[not(self::eg:*) and not(self::egx:*)]) and (eg:attribute or @*) and not(text())]" mode="eg:simple-complex-content-splitter">
-		<xsl:apply-templates select="eg:attribute|@*" mode="eg:attr-real"/>
+		<xsl:apply-templates select="*|@*" mode="eg:attr-real"/>
 		<xsl:apply-templates select="." mode="eg:asserts"/>
 	</xsl:template>
 
@@ -300,7 +302,7 @@ Extensions use the extension namespace:
 	<xsl:template match="*" mode="eg:simple-complex-content-splitter">
 		<xsl:apply-templates select="." mode="eg:elt-mixed"/>
 		<xsl:apply-templates select="." mode="eg:elt-model"/>
-		<xsl:apply-templates select="eg:attribute|@*" mode="eg:attr-real"/>
+		<xsl:apply-templates select="*|@*" mode="eg:attr-real"/>
 		<xsl:apply-templates select="." mode="eg:asserts"/>
 	</xsl:template>
 
@@ -364,14 +366,14 @@ Extensions use the extension namespace:
 				<xsl:when test="$restriction = 'true'">
 					<xs:restriction base="xs:anyType">
 						<xsl:apply-templates select="." mode="eg:simple-type"/>
-						<xsl:apply-templates select="eg:attribute|@*" mode="eg:attr-real"/>
+						<xsl:apply-templates select="*|@*" mode="eg:attr-real"/>
 						<xsl:apply-templates select="." mode="eg:asserts"/>
 					</xs:restriction>
 				</xsl:when>
 				<xsl:otherwise>
 					<xs:extension>
 						<xsl:apply-templates select="." mode="eg:base-type-attr"/>
-						<xsl:apply-templates select="eg:attribute|@*" mode="eg:attr-real"/>
+						<xsl:apply-templates select="*|@*" mode="eg:attr-real"/>
 						<xsl:apply-templates select="." mode="eg:asserts"/>
 					</xs:extension>
 				</xsl:otherwise>
@@ -391,9 +393,15 @@ Extensions use the extension namespace:
 		</xs:attribute>
 	</xsl:template>
 
+	<xsl:template match="xs:anyAttribute" mode="eg:attr-real">
+		<xsl:copy>
+			<xsl:apply-templates select="*|@*"/>
+		</xsl:copy>
+	</xsl:template>
+
 	<xsl:template match="eg:attribute[@eg:occurs='-']" mode="eg:attr-real"/>
 
-	<xsl:template match="@eg:*|@egx:*|eg:*/@*|egx:*/@*|xs:*/@*" mode="eg:attr-real"/>
+	<xsl:template match="*|@eg:*|@egx:*|eg:*/@*|egx:*/@*|xs:*/@*" mode="eg:attr-real"/>
 
 	<!-- Attribute names -->
 	<xsl:template match="@*" mode="eg:attr-name">

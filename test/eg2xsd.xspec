@@ -1944,7 +1944,7 @@
 					<elementTwo>1999-12-31</elementTwo>
 				</xs:choice>
 			</xp:context>
-			<xp:expect label="copy the xs:element and child attributes">
+			<xp:expect label="copy the xs element and child attributes">
 				<xs:choice minOccurs="0">
 					<xs:element name="elementOne" type="xs:integer"/>
 					<xs:element name="elementTwo" type="xs:date"/>
@@ -1960,7 +1960,7 @@
 					</xs:choice>
 				</elementZero>
 			</xp:context>
-			<xp:expect label="copy the xs:element and child attributes">
+			<xp:expect label="copy the xs element and child attributes">
 				<xs:element name="elementZero">
 					<xs:complexType>
 						<xs:sequence>
@@ -1969,6 +1969,24 @@
 								<xs:element name="elementTwo" type="xs:date"/>
 							</xs:choice>
 						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xp:expect>
+		</xp:scenario>
+		<xp:scenario label="with xs:any and xs:anyAttribute">
+			<xp:context>
+				<elementZero eg:content="eg:interleave">
+					<xs:anyAttribute processContents="skip" namespace="##local"/>
+					<xs:any processContents="strict" namespace="##any"/>
+				</elementZero>
+			</xp:context>
+			<xp:expect label="copy the xs elements and child attributes, putting xs:anyAttribute outside the element model">
+				<xs:element name="elementZero">
+					<xs:complexType>
+						<xs:all>
+							<xs:any processContents="strict" namespace="##any"/>
+						</xs:all>
+						<xs:anyAttribute processContents="skip" namespace="##local"/>
 					</xs:complexType>
 				</xs:element>
 			</xp:expect>
