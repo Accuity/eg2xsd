@@ -35,7 +35,9 @@ Extensions use the extension namespace:
 	<xsl:variable name="Header" select="'0.8'"/>
 
 	<xsl:template match="/">
-		<xs:schema elementFormDefault="qualified">
+		<xs:schema>
+			<xsl:apply-templates select="*" mode="eg:apply-namespaces"/>
+			<xsl:attribute name="elementFormDefault">qualified</xsl:attribute>
 			<xsl:variable name="rootns" select="namespace-uri(descendant::*[not(self::eg:*) and not(self::egx:*) and not(self::xs:*)])"/>
 			<xsl:if test="$rootns != ''">
 				<xsl:attribute name="targetNamespace">
@@ -52,6 +54,13 @@ Extensions use the extension namespace:
 		</xs:schema>
 	</xsl:template>
 
+	<!-- Hoist namespaces -->
+	<xsl:template match="*" mode="eg:apply-namespaces">
+		<xsl:copy-of select="./namespace::*[local-name() != 'eg' and local-name() != 'egx']"/>
+		<xsl:apply-templates select="*" mode="eg:apply-namespaces"/>
+	</xsl:template>
+
+	<!-- Import and include -->
 	<xsl:template match="*" mode="eg:imports">
 		<xsl:param name="rootns"/>
 		<xsl:variable name="typePrefix" select="substring-before(@eg:content,':')"/>
@@ -150,13 +159,12 @@ Extensions use the extension namespace:
 		</xsl:choose>
 	</xsl:template>
 
-	<xsl:template match="*[@egx:from]" mode="eg:elt-real">
+	<xsl:template match="*[@egx:from and not(@eg:content)]" mode="eg:elt-real">
 		<xs:element>
 			<xsl:attribute name="ref">
 				<xsl:value-of select="name(.)"/>
 			</xsl:attribute>
 			<xsl:apply-templates select="." mode="eg:elt-occurs"/>
-			<xsl:copy-of select="./namespace::*[. = namespace-uri(current())]"/>
 		</xs:element>
 	</xsl:template>
 
@@ -515,9 +523,6 @@ Extensions use the extension namespace:
 	</xsl:template>
 
 	<xsl:template match="@*" mode="eg:reference-type-attr">
-		<xsl:if test="contains(.,':')">
-			<xsl:copy-of select="/*/namespace::*[name() = substring-before(current(),':')]"/>
-		</xsl:if>
 		<xsl:attribute name="type">
 			<xsl:value-of select="."/>
 		</xsl:attribute>
