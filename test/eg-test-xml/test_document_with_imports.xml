@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <foo xmlns:egx="http://accuity.com/egx/0/"
+	xmlns:eg="http://examplotron.org/0/"
 	xmlns="http://www.example.com/ns/0/"
 	xmlns:bar="http://www.example.com/ns-a/0/">
 	<bar:bar egx:from="ns-a.xsd">Import this.</bar:bar>
 	<bar:baz egx:from="ns-a.xsd">Import this.</bar:baz>
 	<qux egx:from="ns-lib.xsd">Include this.</qux>
-	<quxx egx:from="ns-lib.xsd">Include this too.</quxx>
+	<quxx eg:content="bar:libType" egx:from="ns-a.xsd">Include this type.</quxx>
+	<quxx2 eg:content="ownLibType" egx:from="ns-lib.xsd">Import this type.</quxx2>
 </foo>

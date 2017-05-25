@@ -48,6 +48,5 @@ test/eg2xsd.xspec describes test scenarios that can be run using the
 
 ## To Do ##
 
-* Allow import of type definitions as well as elements
 * Allow import of attributes
 * @egx:maxLength

@@ -31,6 +31,7 @@
 			<xp:context href="eg-test-xml/test_document_with_imports.xml"/>
 			<xp:expect label="create each import/include as required, once, elements referencing them">
 				<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+					xmlns:bar="http://www.example.com/ns-a/0/" 
 					elementFormDefault="qualified" 
 					targetNamespace="http://www.example.com/ns/0/">
 					<xs:import schemaLocation="ns-a.xsd" namespace="http://www.example.com/ns-a/0/"/>
@@ -38,10 +39,11 @@
 					<xs:element name="foo">
 						<xs:complexType>
 							<xs:sequence>
-								<xs:element xmlns:bar="http://www.example.com/ns-a/0/" ref="bar:bar"/>
-								<xs:element xmlns:bar="http://www.example.com/ns-a/0/" ref="bar:baz"/>
-								<xs:element xmlns="http://www.example.com/ns/0/" ref="qux"/>
-								<xs:element xmlns="http://www.example.com/ns/0/" ref="quxx"/>
+								<xs:element ref="bar:bar"/>
+								<xs:element ref="bar:baz"/>
+								<xs:element ref="qux"/>
+								<xs:element name="quxx" type="bar:libType"/>
+								<xs:element name="quxx2" type="ownLibType"/>
 							</xs:sequence>
 						</xs:complexType>
 					</xs:element>
