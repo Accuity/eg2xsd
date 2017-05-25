@@ -54,11 +54,24 @@ Extensions use the extension namespace:
 
 	<xsl:template match="*" mode="eg:imports">
 		<xsl:param name="rootns"/>
+		<xsl:variable name="typePrefix" select="substring-before(@eg:content,':')"/>
 		<xsl:choose>
 			<xsl:when test="namespace-uri(.) != $rootns">
 				<xs:import>
 					<xsl:attribute name="namespace">
 						<xsl:value-of select="namespace-uri(.)"/>
+					</xsl:attribute>
+					<xsl:attribute name="schemaLocation">
+						<xsl:value-of select="@egx:from"/>
+					</xsl:attribute>
+				</xs:import>
+			</xsl:when>
+			<xsl:when test="$typePrefix != ''
+				and $typePrefix != 'egx' and $typePrefix != 'eg'
+				and $typePrefix != 'xsd' and $typePrefix != 'dtd'">
+				<xs:import>
+					<xsl:attribute name="namespace">
+						<xsl:value-of select="namespace::node()[local-name() = $typePrefix]"/>
 					</xsl:attribute>
 					<xsl:attribute name="schemaLocation">
 						<xsl:value-of select="@egx:from"/>
