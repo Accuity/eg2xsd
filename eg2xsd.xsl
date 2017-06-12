@@ -38,7 +38,7 @@ Extensions use the extension namespace:
 		<xs:schema>
 			<xsl:apply-templates select="*" mode="eg:apply-namespaces"/>
 			<xsl:attribute name="elementFormDefault">qualified</xsl:attribute>
-			<xsl:variable name="rootns" select="namespace-uri(descendant::*[not(self::eg:*) and not(self::egx:*) and not(self::xs:*)])"/>
+			<xsl:variable name="rootns" select="namespace-uri((descendant::*[not(self::eg:*) and not(self::egx:*) and not(self::xs:*)])[1])"/>
 			<xsl:if test="$rootns != ''">
 				<xsl:attribute name="targetNamespace">
 					<xsl:value-of select="$rootns"/>

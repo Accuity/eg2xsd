@@ -2031,7 +2031,7 @@
 		</xp:scenario>
 		<xp:scenario label="with an integer">
 			<xp:call template="eg:checkType">
-				<xp:param name="val" select="23"/>
+				<xp:param name="val" select="'23'"/>
 			</xp:call>
 			<xp:expect label="integer should be detected">xs:integer</xp:expect>
 		</xp:scenario>
