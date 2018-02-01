@@ -8,4 +8,8 @@
 	<qux egx:from="ns-lib.xsd">Include this.</qux>
 	<quxx eg:content="bar:libType" egx:from="ns-a.xsd">Include this type.</quxx>
 	<quxx2 eg:content="ownLibType" egx:from="ns-lib.xsd">Import this type.</quxx2>
+	<corge>
+		<eg:attribute name="bar:uier" egx:from="ns-a.xsd">foreignAttr</eg:attribute>
+		<eg:attribute name="grault" egx:from="ns-lib.xsd">ownLibAttr</eg:attribute>
+	</corge>
 </foo>

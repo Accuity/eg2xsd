@@ -38,14 +38,14 @@ Extensions use the extension namespace:
 		<xs:schema>
 			<xsl:apply-templates select="*" mode="eg:apply-namespaces"/>
 			<xsl:attribute name="elementFormDefault">qualified</xsl:attribute>
-			<xsl:variable name="rootns" select="namespace-uri((descendant::*[not(self::eg:*) and not(self::egx:*) and not(self::xs:*)])[1])"/>
-			<xsl:if test="$rootns != ''">
+			<xsl:variable name="root-ns" select="namespace-uri((descendant::*[not(self::eg:*) and not(self::egx:*) and not(self::xs:*)])[1])"/>
+			<xsl:if test="$root-ns != ''">
 				<xsl:attribute name="targetNamespace">
-					<xsl:value-of select="$rootns"/>
+					<xsl:value-of select="$root-ns"/>
 				</xsl:attribute>
 			</xsl:if>
 			<xsl:apply-templates select="//*[@egx:from]" mode="eg:imports">
-				<xsl:with-param name="rootns" select="$rootns"/>
+				<xsl:with-param name="root-ns" select="$root-ns"/>
 			</xsl:apply-templates>
 			<xsl:apply-templates select="node()"/>
 			<xsl:apply-templates select="//*[@eg:define]" mode="eg:def">
@@ -62,42 +62,63 @@ Extensions use the extension namespace:
 
 	<!-- Import and include -->
 	<xsl:template match="*" mode="eg:imports">
-		<xsl:param name="rootns"/>
-		<xsl:variable name="typePrefix" select="substring-before(@eg:content,':')"/>
-		<xsl:choose>
-			<xsl:when test="namespace-uri(.) != $rootns">
-				<xs:import>
-					<xsl:attribute name="namespace">
-						<xsl:value-of select="namespace-uri(.)"/>
-					</xsl:attribute>
-					<xsl:attribute name="schemaLocation">
-						<xsl:value-of select="@egx:from"/>
-					</xsl:attribute>
-				</xs:import>
-			</xsl:when>
-			<xsl:when test="$typePrefix != ''
-				and $typePrefix != 'egx' and $typePrefix != 'eg'
-				and $typePrefix != 'xsd' and $typePrefix != 'dtd'">
-				<xs:import>
-					<xsl:attribute name="namespace">
-						<xsl:value-of select="namespace::node()[local-name() = $typePrefix]"/>
-					</xsl:attribute>
-					<xsl:attribute name="schemaLocation">
-						<xsl:value-of select="@egx:from"/>
-					</xsl:attribute>
-				</xs:import>
-			</xsl:when>
-			<xsl:otherwise>
-				<xs:include>
-					<xsl:attribute name="schemaLocation">
-						<xsl:value-of select="@egx:from"/>
-					</xsl:attribute>
-				</xs:include>
-			</xsl:otherwise>
-		</xsl:choose>
+		<xsl:param name="root-ns"/>
+		<xsl:variable name="ns-prefix" select="substring-before(@eg:content,':')"/>
+		<xsl:variable name="target-ns">
+			<xsl:choose>
+				<xsl:when test="namespace-uri(.) != $root-ns or $ns-prefix = ''">
+					<xsl:value-of select="namespace-uri(.)"/>
+				</xsl:when>
+				<xsl:otherwise>
+					<xsl:value-of select="namespace::node()[local-name() = $ns-prefix]"/>
+				</xsl:otherwise>
+			</xsl:choose>
+		</xsl:variable>
+		<xsl:if test="$target-ns != $root-ns">
+			<xsl:apply-templates select="." mode="eg:import-element">
+				<xsl:with-param name="target-ns" select="$target-ns"/>
+			</xsl:apply-templates>
+		</xsl:if>
+		<xsl:if test="$target-ns = $root-ns">
+			<xsl:apply-templates select="." mode="eg:include-element"/>
+		</xsl:if>
+	</xsl:template>
+
+	<xsl:template match="eg:attribute" mode="eg:imports">
+		<xsl:param name="root-ns"/>
+		<xsl:variable name="ns-prefix" select="substring-before(@name,':')"/>
+		<xsl:variable name="target-ns" select="namespace::node()[local-name() = $ns-prefix]"/>
+		<xsl:if test="$target-ns != $root-ns">
+			<xsl:apply-templates select="." mode="eg:import-element">
+				<xsl:with-param name="target-ns" select="$target-ns"/>
+			</xsl:apply-templates>
+		</xsl:if>
+		<xsl:if test="$target-ns = $root-ns">
+			<xsl:apply-templates select="." mode="eg:include-element"/>
+		</xsl:if>
 	</xsl:template>
 
 	<xsl:template match="*[preceding::*/@egx:from = @egx:from]" mode="eg:imports"/>
+
+	<xsl:template match="*" mode="eg:import-element">
+		<xsl:param name="target-ns"/>
+		<xs:import>
+			<xsl:attribute name="namespace">
+				<xsl:value-of select="$target-ns"/>
+			</xsl:attribute>
+			<xsl:attribute name="schemaLocation">
+				<xsl:value-of select="@egx:from"/>
+			</xsl:attribute>
+		</xs:import>
+	</xsl:template>
+
+	<xsl:template match="*" mode="eg:include-element">
+		<xs:include>
+			<xsl:attribute name="schemaLocation">
+				<xsl:value-of select="@egx:from"/>
+			</xsl:attribute>
+		</xs:include>
+	</xsl:template>
 
 	<!-- Element catchers -->
 	<xsl:template match="*">
@@ -171,6 +192,8 @@ Extensions use the extension namespace:
 	<xsl:template match="*[@eg:occurs='-']" mode="eg:elt-real"/>
 
 	<xsl:template match="eg:*|egx:*" mode="eg:elt-real"/>
+
+	<xsl:template match="eg:attribute[@egx:from]" mode="eg:elt-real"/>
 
 	<xsl:template match="xs:*" mode="eg:elt-real">
 		<xsl:copy>
@@ -411,6 +434,15 @@ Extensions use the extension namespace:
 			<xsl:apply-templates select="." mode="eg:attr-defaults"/>
 			<xsl:apply-templates select="." mode="eg:attr-occurs"/>
 			<xsl:apply-templates select="." mode="eg:attr-type-ref"/>
+		</xs:attribute>
+	</xsl:template>
+
+	<xsl:template match="eg:attribute[@egx:from]" mode="eg:attr-real">
+		<xs:attribute>
+			<xsl:attribute name="ref">
+				<xsl:value-of select="@name"/>
+			</xsl:attribute>
+			<xsl:apply-templates select="." mode="eg:attr-occurs"/>
 		</xs:attribute>
 	</xsl:template>
 

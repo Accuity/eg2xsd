@@ -44,6 +44,12 @@
 								<xs:element ref="qux"/>
 								<xs:element name="quxx" type="bar:libType"/>
 								<xs:element name="quxx2" type="ownLibType"/>
+								<xs:element name="corge">
+									<xs:complexType>
+										<xs:attribute ref="bar:uier" use="required"/>
+										<xs:attribute ref="grault" use="required"/>
+									</xs:complexType>
+								</xs:element>
 							</xs:sequence>
 						</xs:complexType>
 					</xs:element>

@@ -166,9 +166,13 @@ target namespaces to be used in the same schema definition, but it
 also allows a more modular approach, so that each schema file can be
 built separately, and parts shared between them. 
 
-If the element with the eg:from attribute is in the same namespace as
+If the element with the egx:from attribute is in the same namespace as
 the root element, an 'xs:include' is created. If it comes from a 
 different namespace, then an 'xs:import' is created.
+
+If the egx:from attribute is on an eg:attribute element, then the prefix
+given in the attribute @name will be used to determine which namespace
+is being included/imported from. 
 
 This example from the original Examplotron documentation converts 
 to a single RelaxNG file with both namespaces present.
