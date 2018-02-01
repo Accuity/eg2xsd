@@ -98,6 +98,16 @@ Extensions use the extension namespace:
 		</xsl:if>
 	</xsl:template>
 
+	<xsl:template match="xs:anyAttribute" mode="eg:imports">
+		<xsl:param name="root-ns"/>
+		<xsl:variable name="target-ns" select="@namespace"/>
+		<xsl:if test="$target-ns != $root-ns">
+			<xsl:apply-templates select="." mode="eg:import-element">
+				<xsl:with-param name="target-ns" select="$target-ns"/>
+			</xsl:apply-templates>
+		</xsl:if>
+	</xsl:template>
+
 	<xsl:template match="*[preceding::*/@egx:from = @egx:from]" mode="eg:imports"/>
 
 	<xsl:template match="*" mode="eg:import-element">
@@ -131,6 +141,8 @@ Extensions use the extension namespace:
 
 	<!-- Attribute catchers -->
 	<xsl:template match="@*"/>
+
+	<xsl:template match="xs:*/@egx:*|xs:*/@eg:*" priority="2"/>
 
 	<xsl:template match="xs:*/@*">
 		<xsl:copy/>
@@ -191,9 +203,7 @@ Extensions use the extension namespace:
 
 	<xsl:template match="*[@eg:occurs='-']" mode="eg:elt-real"/>
 
-	<xsl:template match="eg:*|egx:*" mode="eg:elt-real"/>
-
-	<xsl:template match="eg:attribute[@egx:from]" mode="eg:elt-real"/>
+	<xsl:template match="eg:*|egx:*" mode="eg:elt-real" priority="2"/>
 
 	<xsl:template match="xs:*" mode="eg:elt-real">
 		<xsl:copy>
@@ -201,7 +211,7 @@ Extensions use the extension namespace:
 		</xsl:copy>
 	</xsl:template>
 
-	<xsl:template match="xs:anyAttribute" mode="eg:elt-real"/>
+	<xsl:template match="xs:anyAttribute" mode="eg:elt-real" priority="2"/>
 
 	<!-- Element occurrences -->
 	<xsl:template match="*[@eg:occurs='?']" mode="eg:elt-occurs">
